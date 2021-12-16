@@ -184,10 +184,15 @@ class ExampleTest(BitcoinTestFramework):
         self.log.info("Wait for node1 to reach current tip (height 11) using RPC")
         self.nodes[1].waitforblockheight(11)
 
+        self.log.info("Getting node1 to mine another block")
+        another_block = int(self.nodes[1].generate(nblocks=1)[0], 16)
+        blocks.append(another_block)
+
         self.log.info("Connect node2 and node1")
         self.connect_nodes(1, 2)
 
         self.log.info("Wait for node2 to receive all the blocks from node1")
+        self.log.info("Here is also included the other block mined by node1")
         self.sync_all()
 
         self.log.info("Add P2P connection to node2")
@@ -213,6 +218,10 @@ class ExampleTest(BitcoinTestFramework):
         with p2p_lock:
             for block in peer_receiving.block_receive_map.values():
                 assert_equal(block, 1)
+
+        self.log.info("Check that node2 received another block")
+        with p2p_lock:
+            assert_equal(another_block in peer_receiving.block_receive_map, True)
 
 
 if __name__ == '__main__':
